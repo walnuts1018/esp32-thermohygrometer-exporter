@@ -1,0 +1,23 @@
+[env]
+# Put environment variables here if needed
+
+[tasks.build]
+description = "Build the exporter"
+run = "go build -o exporter ."
+
+[tasks.run]
+description = "Run the exporter"
+run = "go run ."
+
+[tasks.lint]
+description = "Run golangci-lint"
+run = "golangci-lint run"
+
+[tasks.test]
+description = "Run tests"
+run = "go test -v ./..."
+
+[tools]
+go = "latest"
+golangci-lint = "latest"
+pinact = "latest"
