@@ -3,6 +3,7 @@ package otel
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"sync"
 
 	"go.opentelemetry.io/otel"
@@ -28,8 +29,13 @@ type Exporter struct {
 }
 
 func NewExporter(ctx context.Context, cfg *config.Config) (*Exporter, func(context.Context) error, error) {
+	endpoint := cfg.OTel.Endpoint
+	if u, err := url.Parse(endpoint); err == nil && u.Host != "" {
+		endpoint = u.Host
+	}
+
 	exporterOpts := []otlpmetricgrpc.Option{
-		otlpmetricgrpc.WithEndpoint(cfg.OTel.Endpoint),
+		otlpmetricgrpc.WithEndpoint(endpoint),
 	}
 	if cfg.OTel.Insecure {
 		exporterOpts = append(exporterOpts, otlpmetricgrpc.WithInsecure())
