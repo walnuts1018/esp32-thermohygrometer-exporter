@@ -65,7 +65,7 @@ jobs:
           retention-days: 1
 
   merge:
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     needs: build
     permissions:
       contents: read
