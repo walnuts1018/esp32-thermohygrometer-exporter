@@ -54,7 +54,7 @@ func NewClient(ctx context.Context, cfg *config.Config) *Client {
 	client := oauth2.NewClient(ctx, oauthConfig.TokenSource(ctx))
 
 	return &Client{
-		deviceURL: strings.TrimRight(cfg.ESP32.DeviceURL, "/"),
+		deviceURL: cfg.ESP32.DeviceURL,
 		client:    client,
 	}
 }
