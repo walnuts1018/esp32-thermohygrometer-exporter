@@ -3,7 +3,7 @@
 [![CI](https://github.com/walnuts1018/esp32-thermohygrometer-exporter/actions/workflows/ci.yaml/badge.svg)](https://github.com/walnuts1018/esp32-thermohygrometer-exporter/actions/workflows/ci.yaml)
 [![Docker](https://github.com/walnuts1018/esp32-thermohygrometer-exporter/actions/workflows/docker.yaml/badge.svg)](https://github.com/walnuts1018/esp32-thermohygrometer-exporter/actions/workflows/docker.yaml)
 
-`esp32-thermohygrometer-exporter` is an application that fetches temperature and humidity from an ESP32 thermohygrometer device over HTTP (secured with OIDC) and continuously exports these measurements as OpenTelemetry metrics.
+`esp32-thermohygrometer-exporter` is an application that fetches temperature and humidity from [esp32-thermohygrometer](https://github.com/walnuts1018/esp32-thermohygrometer) and continuously exports these measurements as OpenTelemetry metrics.
 
 ## Features
 
