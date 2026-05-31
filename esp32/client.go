@@ -9,8 +9,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/zitadel/oidc/v3/pkg/client/profile"
 	"golang.org/x/oauth2"
+	"github.com/zitadel/zitadel-go/v3/pkg/client"
 
 	"github.com/walnuts1018/esp32-thermohygrometer-exporter/config"
 )
@@ -36,20 +36,22 @@ type esp32Measurement struct {
 }
 
 func NewClient(ctx context.Context, cfg *config.Config) (*Client, error) {
-	ts, err := profile.NewJWTProfileTokenSourceFromKeyFileData(ctx,
-		cfg.OIDC.Issuer,
-		[]byte(cfg.OIDC.JSONKeyContent),
-		cfg.OIDC.Scopes,
-	)
+	keyFile, err := client.ConfigFromKeyFileData([]byte(cfg.OIDC.JSONKeyContent))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create ZITADEL token source: %w", err)
+		return nil, fmt.Errorf("failed to parse ZITADEL key data: %w", err)
 	}
 
-	client := oauth2.NewClient(ctx, ts)
+	initializer := client.AuthenticationJWTProfile(keyFile, cfg.OIDC.Scopes...)
+	tokenSource, err := initializer(ctx, cfg.OIDC.Issuer)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create token source: %w", err)
+	}
+
+	oauthClient := oauth2.NewClient(ctx, tokenSource)
 
 	return &Client{
 		deviceURL: cfg.ESP32.DeviceURL,
-		client:    client,
+		client:    oauthClient,
 	}, nil
 }
 
