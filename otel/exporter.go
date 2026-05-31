@@ -103,7 +103,6 @@ func (e *Exporter) Export(ctx context.Context, m *esp32.Measurement) error {
 	e.latestHum = m.RelativeHumidityPercent
 	e.latestAttrs = []attribute.KeyValue{
 		attribute.String("sensor", m.Sensor),
-		attribute.String("i2c_address", m.I2CAddress),
 	}
 	e.hasData = true
 
