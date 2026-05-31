@@ -23,7 +23,7 @@ Configuration is loaded from environment variables using `caarlos0/env` and vali
 | `OIDC_TOKEN_URL` | OIDC token URL | **Required** |
 | `OIDC_PRIVATE_KEY_JSON`| ZITADEL Service Account JSON private key content | **Required** |
 | `OIDC_SCOPES` | Space-separated list of scopes to request | |
-| `OIDC_AUDIENCE` | Audience parameter for the token endpoint | |
+| `OIDC_AUDIENCE` | Audience parameter for the token endpoint (ZITADEL ENDPOINT) | |
 | `OTEL_EXPORTER_OTLP_ENDPOINT`| OTLP gRPC endpoint for the collector | **Required** |
 | `OTEL_EXPORTER_OTLP_INSECURE`| Whether to connect to OTLP collector without TLS | `false` |
 | `LOG_LEVEL` | Application logging level (`debug`, `info`, `warn`, `error`) | `info` |
