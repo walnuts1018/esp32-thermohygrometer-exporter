@@ -84,7 +84,7 @@ func NewExporter(ctx context.Context, cfg *config.Config) (*Exporter, func(conte
 		return nil, nil, fmt.Errorf("failed to create humidity gauge: %w", err)
 	}
 
-	_, err = meter.RegisterCallback(func(_ context.Context, o metric.Observer) error {
+	if _, err = meter.RegisterCallback(func(_ context.Context, o metric.Observer) error {
 		e.mu.Lock()
 		defer e.mu.Unlock()
 
@@ -93,8 +93,7 @@ func NewExporter(ctx context.Context, cfg *config.Config) (*Exporter, func(conte
 			o.ObserveFloat64(humGauge, state.hum, state.attrs)
 		}
 		return nil
-	}, tempGauge, humGauge)
-	if err != nil {
+	}, tempGauge, humGauge); err != nil {
 		return nil, nil, fmt.Errorf("failed to register callback: %w", err)
 	}
 
