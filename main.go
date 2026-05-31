@@ -51,15 +51,15 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/livez", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		_, _ = w.Write([]byte("OK"))
 	})
 	mux.HandleFunc("/readyz", func(w http.ResponseWriter, r *http.Request) {
 		if isReady.Load() {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("Ready"))
+			_, _ = w.Write([]byte("Ready"))
 		} else {
 			w.WriteHeader(http.StatusServiceUnavailable)
-			w.Write([]byte("Not Ready"))
+			_, _ = w.Write([]byte("Not Ready"))
 		}
 	})
 
@@ -77,7 +77,9 @@ func main() {
 	defer func() {
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		srv.Shutdown(shutdownCtx)
+		if err := srv.Shutdown(shutdownCtx); err != nil {
+			slog.Error("probe server shutdown failed", "error", err)
+		}
 	}()
 
 	slog.Info("Starting ESP32 Thermohygrometer Exporter", "interval", cfg.App.FetchInterval)

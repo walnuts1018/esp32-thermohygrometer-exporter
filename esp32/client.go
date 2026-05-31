@@ -9,8 +9,8 @@ import (
 	"net/url"
 	"strings"
 
-	"golang.org/x/oauth2"
 	"github.com/zitadel/zitadel-go/v3/pkg/client"
+	"golang.org/x/oauth2"
 
 	"github.com/walnuts1018/esp32-thermohygrometer-exporter/config"
 )
