@@ -37,7 +37,11 @@ func main() {
 		}
 	}()
 
-	client := esp32.NewClient(ctx, cfg)
+	client, err := esp32.NewClient(ctx, cfg)
+	if err != nil {
+		slog.Error("failed to create esp32 client", "error", err)
+		os.Exit(1)
+	}
 
 	slog.Info("Starting ESP32 Thermohygrometer Exporter", "interval", cfg.App.FetchInterval)
 

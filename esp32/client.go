@@ -9,11 +9,17 @@ import (
 	"net/url"
 	"strings"
 
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/clientcredentials"
+	"golang.org/x/oauth2/jwt"
 
 	"github.com/walnuts1018/esp32-thermohygrometer-exporter/config"
 )
+
+type zitadelKey struct {
+	Type   string `json:"type"`
+	KeyID  string `json:"keyId"`
+	Key    string `json:"key"`
+	UserID string `json:"userId"`
+}
 
 type Measurement struct {
 	TemperatureCelsius      float64
@@ -35,27 +41,31 @@ type esp32Measurement struct {
 	MeasuredAtMS            int64   `json:"measured_at_ms"`
 }
 
-func NewClient(ctx context.Context, cfg *config.Config) *Client {
-	params := url.Values{}
+func NewClient(ctx context.Context, cfg *config.Config) (*Client, error) {
+	var keyData zitadelKey
+	if err := json.Unmarshal([]byte(cfg.OIDC.JSONKeyContent), &keyData); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal ZITADEL key JSON: %w", err)
+	}
+
+	jwtConfig := jwt.Config{
+		Email:        keyData.UserID,
+		Subject:      keyData.UserID,
+		PrivateKey:   []byte(keyData.Key),
+		PrivateKeyID: keyData.KeyID,
+		TokenURL:     cfg.OIDC.TokenURL,
+		Scopes:       cfg.OIDC.Scopes,
+	}
+
 	if cfg.OIDC.Audience != "" {
-		params.Set("audience", cfg.OIDC.Audience)
+		jwtConfig.Audience = cfg.OIDC.Audience
 	}
 
-	oauthConfig := clientcredentials.Config{
-		ClientID:       cfg.OIDC.ClientID,
-		ClientSecret:   cfg.OIDC.ClientSecret,
-		TokenURL:       cfg.OIDC.TokenURL,
-		Scopes:         cfg.OIDC.Scopes,
-		EndpointParams: params,
-		AuthStyle:      oauth2.AuthStyleInHeader,
-	}
-
-	client := oauth2.NewClient(ctx, oauthConfig.TokenSource(ctx))
+	client := jwtConfig.Client(ctx)
 
 	return &Client{
 		deviceURL: cfg.ESP32.DeviceURL,
 		client:    client,
-	}
+	}, nil
 }
 
 func (c *Client) FetchLatest(ctx context.Context) (*Measurement, error) {

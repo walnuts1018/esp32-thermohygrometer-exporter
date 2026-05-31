@@ -21,8 +21,7 @@ Configuration is loaded from environment variables using `caarlos0/env` and vali
 | `FETCH_INTERVAL` | Polling interval for measurements (e.g. `60s`, `1m`) | `60s` |
 | `DEVICE_URL` | Base URL of the ESP32 device endpoint | **Required** |
 | `OIDC_TOKEN_URL` | OIDC token URL | **Required** |
-| `OIDC_CLIENT_ID` | OIDC client ID | **Required** |
-| `OIDC_CLIENT_SECRET`| OIDC client secret | **Required** |
+| `OIDC_PRIVATE_KEY_JSON`| ZITADEL Service Account JSON private key content | **Required** |
 | `OIDC_SCOPES` | Space-separated list of scopes to request | |
 | `OIDC_AUDIENCE` | Audience parameter for the token endpoint | |
 | `OTEL_EXPORTER_OTLP_ENDPOINT`| OTLP gRPC endpoint for the collector | **Required** |
