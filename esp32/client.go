@@ -74,11 +74,16 @@ func (c *Client) FetchLatest(ctx context.Context) (*Measurement, error) {
 		return nil, fmt.Errorf("failed to call measurement API: %w", err)
 	}
 	defer func() {
-		_ = resp.Body.Close()
+		if _, err := io.Copy(io.Discard, resp.Body); err != nil {
+			fmt.Printf("failed to read response body: %v\n", err)
+		}
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("failed to close response body: %v\n", err)
+		}
 	}()
 
 	if resp.StatusCode != http.StatusOK {
-		io.Copy(io.Discard, resp.Body)
+		body, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("unexpected status %s: %s", resp.Status, strings.TrimSpace(string(body)))
 	}
 
