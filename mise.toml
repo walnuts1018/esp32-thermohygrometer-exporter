@@ -18,6 +18,6 @@ description = "Run tests"
 run = "go test -v ./..."
 
 [tools]
-go = "latest"
-golangci-lint = "latest"
-pinact = "latest"
+go = "v1.26.3"
+golangci-lint = "2.12.2"
+pinact = "3.10.1"
