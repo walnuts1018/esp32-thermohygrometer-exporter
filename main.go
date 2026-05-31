@@ -65,10 +65,7 @@ func fetchAndExport(ctx context.Context, client *esp32.Client, exporter *otel.Ex
 		return
 	}
 
-	if err := exporter.Export(ctx, m); err != nil {
-		slog.Error("failed to export measurement", "error", err)
-		return
-	}
+	exporter.Export(ctx, m)
 
 	slog.Info("successfully exported measurement",
 		"temperature_celsius", m.TemperatureCelsius,

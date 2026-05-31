@@ -18,14 +18,17 @@ import (
 	"github.com/walnuts1018/esp32-thermohygrometer-exporter/esp32"
 )
 
+type sensorState struct {
+	temp  float64
+	hum   float64
+	attrs metric.MeasurementOption
+}
+
 type Exporter struct {
 	meterProvider *sdkmetric.MeterProvider
 
-	mu          sync.Mutex
-	latestTemp  float64
-	latestHum   float64
-	latestAttrs []attribute.KeyValue
-	hasData     bool
+	mu           sync.Mutex
+	measurements map[string]sensorState
 }
 
 func NewExporter(ctx context.Context, cfg *config.Config) (*Exporter, func(context.Context) error, error) {
@@ -46,8 +49,10 @@ func NewExporter(ctx context.Context, cfg *config.Config) (*Exporter, func(conte
 		return nil, nil, fmt.Errorf("failed to create otlp metric exporter: %w", err)
 	}
 
-	res, err := resource.New(ctx,
-		resource.WithAttributes(
+	res, err := resource.Merge(
+		resource.Default(),
+		resource.NewWithAttributes(
+			semconv.SchemaURL,
 			semconv.ServiceName("esp32-thermohygrometer-exporter"),
 		),
 	)
@@ -64,6 +69,7 @@ func NewExporter(ctx context.Context, cfg *config.Config) (*Exporter, func(conte
 
 	e := &Exporter{
 		meterProvider: meterProvider,
+		measurements:  make(map[string]sensorState),
 	}
 
 	meter := meterProvider.Meter("esp32-thermohygrometer-exporter")
@@ -82,9 +88,9 @@ func NewExporter(ctx context.Context, cfg *config.Config) (*Exporter, func(conte
 		e.mu.Lock()
 		defer e.mu.Unlock()
 
-		if e.hasData {
-			o.ObserveFloat64(tempGauge, e.latestTemp, metric.WithAttributes(e.latestAttrs...))
-			o.ObserveFloat64(humGauge, e.latestHum, metric.WithAttributes(e.latestAttrs...))
+		for _, state := range e.measurements {
+			o.ObserveFloat64(tempGauge, state.temp, state.attrs)
+			o.ObserveFloat64(humGauge, state.hum, state.attrs)
 		}
 		return nil
 	}, tempGauge, humGauge)
@@ -95,16 +101,15 @@ func NewExporter(ctx context.Context, cfg *config.Config) (*Exporter, func(conte
 	return e, meterProvider.Shutdown, nil
 }
 
-func (e *Exporter) Export(ctx context.Context, m *esp32.Measurement) error {
+func (e *Exporter) Export(ctx context.Context, m *esp32.Measurement) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
-	e.latestTemp = m.TemperatureCelsius
-	e.latestHum = m.RelativeHumidityPercent
-	e.latestAttrs = []attribute.KeyValue{
-		attribute.String("sensor", m.Sensor),
+	e.measurements[m.Sensor] = sensorState{
+		temp: m.TemperatureCelsius,
+		hum:  m.RelativeHumidityPercent,
+		attrs: metric.WithAttributes(
+			attribute.String("sensor", m.Sensor),
+		),
 	}
-	e.hasData = true
-
-	return nil
 }
