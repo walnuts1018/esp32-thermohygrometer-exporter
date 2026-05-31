@@ -19,7 +19,6 @@ type Measurement struct {
 	TemperatureCelsius      float64
 	RelativeHumidityPercent float64
 	Sensor                  string
-	I2CAddress              string
 	MeasuredAtMS            int64
 }
 
@@ -79,7 +78,7 @@ func (c *Client) FetchLatest(ctx context.Context) (*Measurement, error) {
 	}()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
+		io.Copy(io.Discard, resp.Body)
 		return nil, fmt.Errorf("unexpected status %s: %s", resp.Status, strings.TrimSpace(string(body)))
 	}
 
@@ -92,7 +91,6 @@ func (c *Client) FetchLatest(ctx context.Context) (*Measurement, error) {
 		TemperatureCelsius:      latest.TemperatureCelsius,
 		RelativeHumidityPercent: latest.RelativeHumidityPercent,
 		Sensor:                  latest.Sensor,
-		I2CAddress:              latest.I2CAddress,
 		MeasuredAtMS:            latest.MeasuredAtMS,
 	}, nil
 }
