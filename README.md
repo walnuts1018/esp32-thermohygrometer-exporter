@@ -19,6 +19,7 @@ Configuration is loaded from environment variables using `caarlos0/env` and vali
 | Name | Description | Default |
 | --- | --- | --- |
 | `FETCH_INTERVAL` | Polling interval for measurements (e.g. `60s`, `1m`) | `60s` |
+| `PROBE_PORT` | Port for liveness/readiness probes (`/livez`, `/readyz`) | `8080` |
 | `DEVICE_URL` | Base URL of the ESP32 device endpoint | **Required** |
 | `OIDC_ISSUER` | OIDC issuer URL | **Required** |
 | `OIDC_PRIVATE_KEY_JSON`| ZITADEL Service Account JSON private key content | **Required** |

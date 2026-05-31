@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/signal"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -43,31 +46,70 @@ func main() {
 		os.Exit(1)
 	}
 
+	var isReady atomic.Bool
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/livez", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	})
+	mux.HandleFunc("/readyz", func(w http.ResponseWriter, r *http.Request) {
+		if isReady.Load() {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("Ready"))
+		} else {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			w.Write([]byte("Not Ready"))
+		}
+	})
+
+	srv := &http.Server{
+		Addr:    fmt.Sprintf(":%d", cfg.App.ProbePort),
+		Handler: mux,
+	}
+
+	go func() {
+		slog.Info("Starting probe server", "port", cfg.App.ProbePort)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			slog.Error("probe server failed", "error", err)
+		}
+	}()
+	defer func() {
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		srv.Shutdown(shutdownCtx)
+	}()
+
 	slog.Info("Starting ESP32 Thermohygrometer Exporter", "interval", cfg.App.FetchInterval)
 
 	ticker := time.NewTicker(cfg.App.FetchInterval)
 	defer ticker.Stop()
 
-	fetchAndExport(ctx, client, exporter)
+	if err := fetchAndExport(ctx, client, exporter); err == nil {
+		isReady.Store(true)
+	}
+
 	for {
 		select {
 		case <-ctx.Done():
 			slog.Info("shutting down periodic export")
 			return
 		case <-ticker.C:
-			fetchAndExport(ctx, client, exporter)
+			if err := fetchAndExport(ctx, client, exporter); err == nil {
+				isReady.Store(true)
+			}
 		}
 	}
 }
 
-func fetchAndExport(ctx context.Context, client *esp32.Client, exporter *otel.Exporter) {
+func fetchAndExport(ctx context.Context, client *esp32.Client, exporter *otel.Exporter) error {
 	fetchCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 
 	m, err := client.FetchLatest(fetchCtx)
 	if err != nil {
 		slog.Error("failed to fetch latest measurement", "error", err)
-		return
+		return err
 	}
 
 	exporter.Export(ctx, m)
@@ -77,4 +119,5 @@ func fetchAndExport(ctx context.Context, client *esp32.Client, exporter *otel.Ex
 		"relative_humidity_percent", m.RelativeHumidityPercent,
 		"sensor", m.Sensor,
 	)
+	return nil
 }
