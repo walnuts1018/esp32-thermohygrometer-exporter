@@ -56,10 +56,6 @@ func NewClient(ctx context.Context, cfg *config.Config) (*Client, error) {
 		Scopes:       cfg.OIDC.Scopes,
 	}
 
-	if cfg.OIDC.Audience != "" {
-		jwtConfig.Audience = cfg.OIDC.Audience
-	}
-
 	client := jwtConfig.Client(ctx)
 
 	return &Client{
