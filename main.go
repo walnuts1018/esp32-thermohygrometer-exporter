@@ -48,6 +48,7 @@ func main() {
 	ticker := time.NewTicker(cfg.App.FetchInterval)
 	defer ticker.Stop()
 
+	fetchAndExport(ctx, client, exporter)
 	for {
 		select {
 		case <-ctx.Done():
