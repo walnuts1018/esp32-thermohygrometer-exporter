@@ -11,7 +11,7 @@ import (
 	"go.opentelemetry.io/otel/metric"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
-	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.37.0"
 
 	"github.com/walnuts1018/esp32-thermohygrometer-exporter/config"
 	"github.com/walnuts1018/esp32-thermohygrometer-exporter/esp32"
