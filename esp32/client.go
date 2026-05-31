@@ -9,17 +9,11 @@ import (
 	"net/url"
 	"strings"
 
-	"golang.org/x/oauth2/jwt"
+	"github.com/zitadel/oidc/v3/pkg/client/profile"
+	"golang.org/x/oauth2"
 
 	"github.com/walnuts1018/esp32-thermohygrometer-exporter/config"
 )
-
-type zitadelKey struct {
-	Type   string `json:"type"`
-	KeyID  string `json:"keyId"`
-	Key    string `json:"key"`
-	UserID string `json:"userId"`
-}
 
 type Measurement struct {
 	TemperatureCelsius      float64
@@ -42,25 +36,16 @@ type esp32Measurement struct {
 }
 
 func NewClient(ctx context.Context, cfg *config.Config) (*Client, error) {
-	var keyData zitadelKey
-	if err := json.Unmarshal([]byte(cfg.OIDC.JSONKeyContent), &keyData); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal ZITADEL key JSON: %w", err)
+	ts, err := profile.NewJWTProfileTokenSourceFromKeyFileData(ctx,
+		cfg.OIDC.Issuer,
+		[]byte(cfg.OIDC.JSONKeyContent),
+		cfg.OIDC.Scopes,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create ZITADEL token source: %w", err)
 	}
 
-	jwtConfig := jwt.Config{
-		Email:        keyData.UserID,
-		Subject:      keyData.UserID,
-		PrivateKey:   []byte(keyData.Key),
-		PrivateKeyID: keyData.KeyID,
-		TokenURL:     cfg.OIDC.TokenURL,
-		Scopes:       cfg.OIDC.Scopes,
-	}
-
-	if cfg.OIDC.Audience != "" {
-		jwtConfig.Audience = cfg.OIDC.Audience
-	}
-
-	client := jwtConfig.Client(ctx)
+	client := oauth2.NewClient(ctx, ts)
 
 	return &Client{
 		deviceURL: cfg.ESP32.DeviceURL,
