@@ -19,5 +19,5 @@ run = "go test -v ./..."
 
 [tools]
 go = "1.26.6"
-golangci-lint = "2.12.2"
+golangci-lint = "2.13.2"
 pinact = "3.10.1"
