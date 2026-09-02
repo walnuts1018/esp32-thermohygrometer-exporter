@@ -1,4 +1,4 @@
-FROM golang:1.26.6-trixie AS builder
+FROM golang:1.27.1-trixie AS builder
 ENV ROOT=/build
 RUN mkdir ${ROOT}
 WORKDIR ${ROOT}
