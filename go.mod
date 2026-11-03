@@ -8,7 +8,7 @@ tool (
 )
 
 require (
-	github.com/caarlos0/env/v11 v11.4.1
+	github.com/caarlos0/env/v11 v11.4.2
 	github.com/go-playground/validator/v10 v10.30.3
 	github.com/zitadel/zitadel-go/v3 v3.29.0
 	go.opentelemetry.io/otel v1.43.0
